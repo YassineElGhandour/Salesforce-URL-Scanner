@@ -22,10 +22,15 @@
     <!-- Datatable only visible when showList is true, and displays the result urls -->
     <aura:if isTrue="{!v.showList}">        
         <div align="center" style="height: 300px">
-            <lightning:datatable data="{!v.data}"
-                                 columns="{!v.columns}"
-                                 keyField="Id"
-                                 hideCheckboxColumn="true"/>
+            <aura:if isTrue="{!not(empty(v.data))}">  
+            	<lightning:datatable data="{!v.data}"
+                                     columns="{!v.columns}"
+                                     keyField="Id"
+                                     hideCheckboxColumn="true"/>
+            </aura:if>
+            <aura:if isTrue="{!empty(v.data)}">  
+            	No URLs found
+            </aura:if>
         </div>
     </aura:if>
 </aura:component>
