@@ -1,11 +1,20 @@
 public class UrlScannerDatabaseController {
+    // SOQL get case number by Id
+    public static List<Case> getCaseNumberById(String caseId) {
+        List<Case> cases = new List<Case>();
+        // Check if the user has read rights of Case
+        if(Schema.sObjectType.Case.isAccessible() && caseId != null && String.isNotEmpty(caseId)) {
+            cases = [SELECT CaseNumber FROM Case WHERE Id =: caseId];
+        }        
+        return cases;
+    }
     
     // SOQL query to get the ContentDocumentId of ContentDocumentLink by the Case Id
     public static List<ContentDocumentLink> getContentDocumentLinkByCaseId(String caseId) {
         List<ContentDocumentLink> contentDocumentLinksByCaseId = new List<ContentDocumentLink>();
         // Check if the user has read rights of ContentDocumentLink
         if(Schema.sObjectType.ContentDocumentLink.isAccessible() && caseId != null && String.isNotEmpty(caseId)) {
-            contentDocumentLinksByCaseId = [SELECT ContentDocumentId FROM ContentDocumentLink 
+            contentDocumentLinksByCaseId = [SELECT ContentDocumentId, ContentDocument.CreatedBy.Email, ContentDocument.Title, ContentDocument.CreatedBy.LastName FROM ContentDocumentLink 
                                             WHERE LinkedEntityId =: caseId ORDER BY ContentDocument.CreatedDate DESC LIMIT 1];
         }        
         return contentDocumentLinksByCaseId;
