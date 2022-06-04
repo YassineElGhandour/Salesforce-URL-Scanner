@@ -1,15 +1,15 @@
 public class UrlScannerApiHandler {
-	private static final String IP_QUALITY_SCORE_API_KEY = '';
-	//Virus Total endpoint for URL reports
+    
+	// endpoint for URL reports
 	private static final String IP_QUALITY_SCORE_EP = 'https://ipqualityscore.com/api/json/url';
-    private static final Integer VT_THRESHOLD = 10;
+    private static final Integer IPQ_THRESHOLD = 10;
 
-	public static boolean scanUrlWithIpQuality(String url){
+	public static Boolean scanUrlWithIpQuality(String url, String ipQualityScoreApiKey){
         Boolean state = false;
 		String urlEncoded = EncodingUtil.urlEncode(url, 'UTF-8');
 
         // create the get request
-        String endPoint = IP_QUALITY_SCORE_EP + '?key=' + IP_QUALITY_SCORE_API_KEY + '&url='  + urlEncoded;
+        String endPoint = IP_QUALITY_SCORE_EP + '?key=' + ipQualityScoreApiKey + '&url='  + urlEncoded;
         Http http = new Http();
         HttpRequest request = new HttpRequest();
         request.setEndpoint(endPoint);
@@ -20,10 +20,10 @@ public class UrlScannerApiHandler {
             response = http.send(request);
             if(response.getStatusCode() == 200) {
                 Map<String,Object> urlResult = new Map<String,Object>();
-                urlResult = (Map<String, Object>)JSON.deserializeUntyped(response.getBody());
+                urlResult = (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
 
                 Integer riskScoreCounter = (Integer) urlResult.get('risk_score');
-                if(riskScoreCounter > VT_THRESHOLD) {
+                if(riskScoreCounter > IPQ_THRESHOLD) {
                     System.debug('Count of risk score exceeds threshold');
                     state = true;
                 }

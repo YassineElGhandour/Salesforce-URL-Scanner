@@ -1,8 +1,48 @@
 public class UrlScannerService {
     private static final String HTTPS = 'https://';
     private static final String HTTP = 'http://';
+        
+    public Map<String, Object> scanUrlsInFile(String caseId) {
+        Boolean maliciousFile = false;
+        Map<String, Object> mapOfDataAndFileStatus = new Map<String, Object>();
+        List<Map<String, String>> listOfMapsOfUrls = new List<Map<String, String>>();
+        List<IPQualityScore__c> iQualictyScores = UrlScannerDatabaseController.getIPQualityScore();
+        
+        if(iQualictyScores != null && iQualictyScores.size() > 0) {
+            String ipQualityScoreApiKey = iQualictyScores[0].API_Key__c != null ? iQualictyScores[0].API_Key__c : '';
+            // Fetch the urls from the input file inserted by the user in the Case
+            List<String> urls = getUrlsInString(getFileContentAsString(caseId));
+            System.debug('listOfMapsOfUrls : ' + listOfMapsOfUrls);
+          	// loop throught the urls and put them in a map where the key is 'url', this will be needed to populate data in the lightning aura datatable
+          	for(String oneUrl : urls) {
+                // Populate the list with map with two keys, once is the url and the other is the status of the url (safe or not)
+                Boolean isMalicious = UrlScannerApiHandler.scanUrlWithIpQuality(oneUrl, ipQualityScoreApiKey);
+                Map<String, String> mapOfUrls = new Map<String, String>();
+                mapOfUrls.put('url', oneUrl);
+                mapOfUrls.put('status', isMalicious ? 'Malicious URL' : 'Safe URL');
+                listOfMapsOfUrls.add(mapOfUrls);
+                
+                // Only update maliciousFile boolean to be true if it was false in previoius iteration, if it becomes true, then keep it as it since that means that a malicious url has been detected
+                if(!maliciousFile) {
+                    maliciousFile = isMalicious;
+                }
+            }
+        }
+        
+        // If a malicious url has been detected, delete the file
+        if(maliciousFile) {
+            UrlScannerDatabaseController.deleteMaliciousFile(caseId);
+        }
+        
+        System.debug('listOfMapsOfUrls : ' + listOfMapsOfUrls);
+        // Populate final map
+        mapOfDataAndFileStatus.put('list', listOfMapsOfUrls);
+        mapOfDataAndFileStatus.put('status', maliciousFile);
+        
+        return mapOfDataAndFileStatus;
+    }
     
-    public static List<String> getUrlsInString(String fileContent) {
+    private static List<String> getUrlsInString(String fileContent) {
         // Regex to detect urls
         String regexUrl =  '(?:(?:(?:[a-z0-9]{3,9}:(?://)?)(?:[-;:&=+$,w]+@)?[a-z0-9.-]+|(?:www.|[-;:&=+$??,w]+@)[a-z0-9.-]+)((?:/[+~%/.w-]*)?\\??(?:[-+=&;%@.w]*)#?w*)?)';
 
@@ -28,7 +68,7 @@ public class UrlScannerService {
         return urls;
     }
     
-    public static String getFileContentAsString(String caseId) {
+    private static String getFileContentAsString(String caseId) {
         // SF doesn't allow semi-join query for ContentVersion and ContentDocumentLink, that's why we need two SOQL queries to get the end result which is VersionData
         String fileContent = '';
         // Fetch the ContentDocumentLink First to get the ContentDocumentId
