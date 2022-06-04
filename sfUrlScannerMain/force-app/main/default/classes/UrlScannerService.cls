@@ -31,11 +31,13 @@ public class UrlScannerService {
         // Fetch the urls from the input file inserted by the user in the Case
       	List<String> urls = getUrlsInString(getFileContentAsString(caseId));
         
+        // Get url size to keep it under 90 to avoid 101 too many callouts exception
+        Integer urlSize = urls.size();
         // Loop throught the urls and put them in a map where the key is 'url', this will be needed to populate data in the lightning aura datatable
         for(String oneUrl : urls) {
             // a map where the keys are the state and status and the results are whether the api call was made succesfully and the safety of the url (respectively)
-            Map<String, Object> mapOfScannedUrlsWithStatus = UrlScannerApiHandler.scanUrlWithIpQuality(oneUrl, ipQualityScoreApiKey);
-            Integer successApiCall = mapOfScannedUrlsWithStatus != null && mapOfScannedUrlsWithStatus.get('response_status') != null ? (Integer) mapOfScannedUrlsWithStatus.get('response_status') : 0;
+            Map<String, Object> mapOfScannedUrlsWithStatus = urlSize <= 90 ? UrlScannerApiHandler.scanUrlWithIpQuality(oneUrl, ipQualityScoreApiKey) : new Map<String, Object>();
+            Integer successApiCall = mapOfScannedUrlsWithStatus != null && mapOfScannedUrlsWithStatus.get('response_status') != null ? (Integer) mapOfScannedUrlsWithStatus.get('response_status') : 400;
             Boolean isMalicious = false;
             String urlSafety = '';
                 
@@ -47,10 +49,7 @@ public class UrlScannerService {
                 urlSafety = isMalicious ? 'Malicious URL' : 'Safe URL';
                 connectedToIPQ = true;
             }
-            else {
-                connectedToIPQ = false;
-            }
-
+            
 			// Populate the list with map with two keys, once is the url and the other is the status of the url (safe or not)
             mapOfUrls.put('url', oneUrl);
             mapOfUrls.put('status', urlSafety);
@@ -74,7 +73,8 @@ public class UrlScannerService {
                 String emailDestination = contentDocLinks[0].ContentDocument.CreatedBy.email;
                 String body = 'Dear ' + contentDocLinks[0].ContentDocument.CreatedBy.LastName + ',<br/><br/>';
                 body += 'The file titled ' + contentDocLinks[0].ContentDocument.Title + ' that you have attempted to attach to the case '; 
-                body += '<a href="'+ instanceUrl +  '/' + caseId + '">' + cases[0].CaseNumber + '</a> has been deleted because it contains malicious URLs.<br/><br/>';
+                body += '<a href="'+ instanceUrl +  '/' + caseId + '">' + cases[0].CaseNumber + '</a> has been deleted because it contains malicious URLs.<br/>';
+                body += 'Please review the file and reupload it without the malicious urls, and do not click on any of them.<br/><br/>';
                 body += 'Best regards';
                 fireEmailNotification(emailDestination, subject, body);
             }

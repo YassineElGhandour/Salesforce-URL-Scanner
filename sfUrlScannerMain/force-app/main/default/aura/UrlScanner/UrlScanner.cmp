@@ -12,8 +12,8 @@
     <aura:handler name="init" value="{!this}" action="{!c.init}"/>
     
     <!-- Lightning button to upload a file-->
-    <div style="height: 500px" align="center">
-        <div>
+    <div align="center" id="Parent">
+        <div id="Child">
             <lightning:fileUpload label="Upload a .txt file here"
                                   name="fileUploader"
                                   multiple="false"
@@ -27,21 +27,24 @@
         <!-- Datatable only visible when showList is true, and displays the result urls -->
         <aura:if isTrue="{!v.loaded == false}">
             <aura:if isTrue="{!v.showList}">
-                <div align="center" style="height: 200px">
-                    <div>
-                        <aura:if isTrue="{!v.isConnected == false}">
-                            <div><strong>Failure of connection to IP Quality Score, as a result URLs statuses are not displayed</strong></div>
-                        </aura:if>
-                    </div>
+                <div align="center" id="Child">
+                    <aura:if isTrue="{!not(v.isConnected)}">
+                        <div><strong>Failure of connection to IP Quality Score, as a result URLs statuses are not displayed</strong></div>
+                    </aura:if>
                     <br/>
-                    <div>
+                    <div id = "Child">
                         <aura:if isTrue="{!not(empty(v.data))}">
+                            <aura:if isTrue="{!v.data.length >= 90}" > 
+                                <strong>Please upload a file contains less than a 100 URLs to see results of URLs statuses</strong>
+                            </aura:if>
+                            <br/>
                             <lightning:datatable data="{!v.data}"
                                                  columns="{!v.columns}"
                                                  keyField="Id"
                                                  hideCheckboxColumn="true"/>
+                            
+                            <aura:set attribute="else">No URLs found</aura:set>
                         </aura:if>
-                        <aura:if isTrue="{!empty(v.data)}">No URLs found</aura:if>
                     </div>
                 </div>
             </aura:if>

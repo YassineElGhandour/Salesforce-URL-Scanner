@@ -42,7 +42,6 @@ public class UrlScannerApiHandler {
         catch (Exception e) {
             System.debug('EXCEPTION IN UrlScannerApiHandler : ' + e.getStackTraceString() + ' -- ' + e.getMessage());
         }
-        
         mapOfStatusAndState.put('response_status', responseStatus);
         return mapOfStatusAndState;
 	}

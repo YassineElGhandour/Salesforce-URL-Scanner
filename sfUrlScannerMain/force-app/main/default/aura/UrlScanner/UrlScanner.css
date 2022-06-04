@@ -1,8 +1,10 @@
-.THIS.exampleHolder{
-    position: relative;
-    display: inline-block;
-    margin-left: 15px;
-    width: 55px;
-    vertical-align: middle;
-    white-space: nowrap;
+.THIS.Parent{ 
+    width: 100px; 
+    display: table-cell; 
+    vertical-align: middle; }
+
+.THIS.Child{ 
+    width: 100px; 
+    word-wrap: break-word; 
+    display: table-cell; 
 }
