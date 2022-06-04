@@ -3,29 +3,46 @@ public class UrlScannerService {
     private static final String HTTP = 'http://';
         
     public Map<String, Object> scanUrlsInFile(String caseId) {
-        Boolean maliciousFile = false;
+        Boolean maliciousFile = false; 
+        Boolean connectedToIPQ = false;
         Map<String, Object> mapOfDataAndFileStatus = new Map<String, Object>();
         List<Map<String, String>> listOfMapsOfUrls = new List<Map<String, String>>();
-        List<IPQualityScore__c> iQualictyScores = UrlScannerDatabaseController.getIPQualityScore();
+        List<IPQualityScore__c> ipQualityScores = UrlScannerDatabaseController.getIPQualityScore();
         
-        if(iQualictyScores != null && iQualictyScores.size() > 0) {
-            String ipQualityScoreApiKey = iQualictyScores[0].API_Key__c != null ? iQualictyScores[0].API_Key__c : '';
-            // Fetch the urls from the input file inserted by the user in the Case
-            List<String> urls = getUrlsInString(getFileContentAsString(caseId));
-            System.debug('listOfMapsOfUrls : ' + listOfMapsOfUrls);
-          	// loop throught the urls and put them in a map where the key is 'url', this will be needed to populate data in the lightning aura datatable
-          	for(String oneUrl : urls) {
-                // Populate the list with map with two keys, once is the url and the other is the status of the url (safe or not)
-                Boolean isMalicious = UrlScannerApiHandler.scanUrlWithIpQuality(oneUrl, ipQualityScoreApiKey);
-                Map<String, String> mapOfUrls = new Map<String, String>();
-                mapOfUrls.put('url', oneUrl);
-                mapOfUrls.put('status', isMalicious ? 'Malicious URL' : 'Safe URL');
-                listOfMapsOfUrls.add(mapOfUrls);
+        // Get IP Quality API Key to be used in EP
+        String ipQualityScoreApiKey = ipQualityScores != null && ipQualityScores.size() > 0 && ipQualityScores[0].API_Key__c != null ? ipQualityScores[0].API_Key__c : '';
+      	
+        // Fetch the urls from the input file inserted by the user in the Case
+      	List<String> urls = getUrlsInString(getFileContentAsString(caseId));
+        
+        // Loop throught the urls and put them in a map where the key is 'url', this will be needed to populate data in the lightning aura datatable
+        for(String oneUrl : urls) {
+            // a map where the keys are the state and status and the results are whether the api call was made succesfully and the safety of the url (respectively)
+            Map<String, Object> mapOfScannedUrlsWithStatus = UrlScannerApiHandler.scanUrlWithIpQuality(oneUrl, ipQualityScoreApiKey);
+            Integer successApiCall = mapOfScannedUrlsWithStatus != null && mapOfScannedUrlsWithStatus.get('response_status') != null ? (Integer) mapOfScannedUrlsWithStatus.get('response_status') : 0;
+            Boolean isMalicious = false;
+            String urlSafety = '';
                 
-                // Only update maliciousFile boolean to be true if it was false in previoius iteration, if it becomes true, then keep it as it since that means that a malicious url has been detected
-                if(!maliciousFile) {
-                    maliciousFile = isMalicious;
-                }
+            // Init list of maps for datatable
+            Map<String, String> mapOfUrls = new Map<String, String>();
+            // Get if the url is malicious only when the api call is successful
+            if(successApiCall == 200) {
+                isMalicious = mapOfScannedUrlsWithStatus != null && mapOfScannedUrlsWithStatus.get('state') != null ? (Boolean) mapOfScannedUrlsWithStatus.get('state') : false;
+                urlSafety = isMalicious ? 'Malicious URL' : 'Safe URL';
+                connectedToIPQ = true;
+            }
+            else {
+                connectedToIPQ = false;
+            }
+
+			// Populate the list with map with two keys, once is the url and the other is the status of the url (safe or not)
+            mapOfUrls.put('url', oneUrl);
+            mapOfUrls.put('status', urlSafety);
+            listOfMapsOfUrls.add(mapOfUrls);
+                
+            // Only update maliciousFile boolean to be true if it was false in previoius iteration, if it becomes true, then keep it as it since that means that a malicious url has been detected
+            if(!maliciousFile) {
+                maliciousFile = isMalicious;
             }
         }
         
@@ -34,9 +51,10 @@ public class UrlScannerService {
             UrlScannerDatabaseController.deleteMaliciousFile(caseId);
         }
         
-        System.debug('listOfMapsOfUrls : ' + listOfMapsOfUrls);
-        // Populate final map
+        // Populate final map with 3 keys, list contains the urls, connectedToIPQ to check if the API call was made, status to check if there's at least one malicious URL
         mapOfDataAndFileStatus.put('list', listOfMapsOfUrls);
+        System.debug('connectedToIPQ : ' + connectedToIPQ);
+        mapOfDataAndFileStatus.put('connectedToIPQ', connectedToIPQ);
         mapOfDataAndFileStatus.put('status', maliciousFile);
         
         return mapOfDataAndFileStatus;
@@ -75,7 +93,7 @@ public class UrlScannerService {
         List<ContentDocumentLink> contentDocumentLinksOfCase = UrlScannerDatabaseController.getContentDocumentLinkByCaseId(caseId);
         List<ContentVersion> contentDocumentVersionsOfCase = new List<ContentVersion>();
         if(contentDocumentLinksOfCase != null && contentDocumentLinksOfCase.size() > 0) {
-            // Get the ContentVersion second witht the ContentDocumentId of the list contentDocumentLinksOfCase
+            // Get the ContentVersion second with the ContentDocumentId of the list contentDocumentLinksOfCase
             contentDocumentVersionsOfCase = UrlScannerDatabaseController.getContentVersionsByContentDocumentLink(contentDocumentLinksOfCase[0].ContentDocumentId, '');
             for(ContentVersion oneCV : contentDocumentVersionsOfCase) {
                 Blob versionData = oneCV.VersionData;

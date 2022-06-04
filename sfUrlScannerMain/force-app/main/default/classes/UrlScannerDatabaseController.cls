@@ -20,10 +20,7 @@ public class UrlScannerDatabaseController {
                 contentDocumentVersions = [SELECT Id, ContentDocumentId, VersionData FROM ContentVersion WHERE ContentDocumentId =: contentDocumentId AND IsLatest = true];
             }
             else if(contentVersionId != null && String.isNotEmpty(contentVersionId)) {
-                contentDocumentVersions = [SELECT Id, ContentDocumentId, VersionData 
-                                           FROM ContentVersion 
-                                           WHERE Id =: contentVersionId AND IsLatest = true 
-                                          ];
+                contentDocumentVersions = [SELECT Id, ContentDocumentId, VersionData FROM ContentVersion WHERE Id =: contentVersionId AND IsLatest = true];
             }
         }
         return contentDocumentVersions;
@@ -45,5 +42,5 @@ public class UrlScannerDatabaseController {
         if(Schema.sObjectType.ContentDocumentLink.isDeletable()) {
             Database.delete(getContentDocumentLinkByCaseId(caseId), false);
         }
-    } 
+    }
 }

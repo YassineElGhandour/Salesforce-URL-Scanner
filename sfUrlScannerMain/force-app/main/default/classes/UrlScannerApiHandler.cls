@@ -4,8 +4,10 @@ public class UrlScannerApiHandler {
 	private static final String IP_QUALITY_SCORE_EP = 'https://ipqualityscore.com/api/json/url';
     private static final Integer IPQ_THRESHOLD = 10;
 
-	public static Boolean scanUrlWithIpQuality(String url, String ipQualityScoreApiKey){
+	public static Map<String, Object> scanUrlWithIpQuality(String url, String ipQualityScoreApiKey) {
         Boolean state = false;
+        Integer responseStatus = 400;
+        Map<String, Object> mapOfStatusAndState = new Map<String, Object>();
 		String urlEncoded = EncodingUtil.urlEncode(url, 'UTF-8');
 
         // create the get request
@@ -22,20 +24,26 @@ public class UrlScannerApiHandler {
                 Map<String,Object> urlResult = new Map<String,Object>();
                 urlResult = (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
 
-                Integer riskScoreCounter = (Integer) urlResult.get('risk_score');
-                if(riskScoreCounter > IPQ_THRESHOLD) {
-                    System.debug('Count of risk score exceeds threshold');
-                    state = true;
+                if(urlResult != null && urlResult.get('risk_score') != null) {
+                    responseStatus = 200;
+                    Integer riskScoreCounter = (Integer) urlResult.get('risk_score');
+                    if(riskScoreCounter > IPQ_THRESHOLD) {
+                        state = true;
+                    }
                 }
             }
             else {
-                System.debug('Status not OK : ' + response.getStatusCode());
+                System.debug('Status not OK : ' + responseStatus);
             }
+            
+            // Populate map
+            mapOfStatusAndState.put('state', state);
         }
         catch (Exception e) {
             System.debug('EXCEPTION IN UrlScannerApiHandler : ' + e.getStackTraceString() + ' -- ' + e.getMessage());
         }
-
-        return state;
+        
+        mapOfStatusAndState.put('response_status', responseStatus);
+        return mapOfStatusAndState;
 	}
 }
