@@ -2,22 +2,6 @@ public class UrlScannerService {
     private static final String HTTPS = 'https://';
     private static final String HTTP = 'http://';
     
-    public void fireEmailNotification(String emailDestination, String subject, String body) {
-        List<Messaging.SingleEmailMessage> mailList = new List<Messaging.SingleEmailMessage>();
-        
-        Messaging.SingleEmailMessage mail =  new Messaging.SingleEmailMessage();
-   
-        List<String> sendTo = new List<String>();
-        sendTo.add(emailDestination);
-        mail.setToAddresses(sendTo);
-        mail.setSubject(subject);
-        mail.setHtmlBody(body);
-   
-        mailList.add(mail);
-        
-        Messaging.sendEmail(mailList);
-    }
-    
     public Map<String, Object> scanUrlsInFile(String caseId) {
         Boolean maliciousFile = false; 
         Boolean connectedToIPQ = false;
@@ -61,26 +45,9 @@ public class UrlScannerService {
             }
         }
         
-        // If a malicious url has been detected, delete the file
+        // If a malicious url has been detected, delete the file and fire an email to the user who uploaded it
         if(maliciousFile) {
-        	// Fire email to notify the user about the deleted file
-        	List<Case> cases = UrlScannerDatabaseController.getCaseNumberById(caseId);
-            List<ContentDocumentLink> contentDocLinks = UrlScannerDatabaseController.getContentDocumentLinkByCaseId(caseId);
-
-            if(cases != null && cases.size() > 0 && contentDocLinks != null && contentDocLinks.size() > 0) {
-            	String instanceUrl = URL.getSalesforceBaseUrl().toExternalForm();
-                String subject = 'File attached to the case ' + cases[0].CaseNumber + ' will be deleted';
-                String emailDestination = contentDocLinks[0].ContentDocument.CreatedBy.email;
-                String body = 'Dear ' + contentDocLinks[0].ContentDocument.CreatedBy.LastName + ',<br/><br/>';
-                body += 'The file titled ' + contentDocLinks[0].ContentDocument.Title + ' that you have attempted to attach to the case '; 
-                body += '<a href="'+ instanceUrl +  '/' + caseId + '">' + cases[0].CaseNumber + '</a> has been deleted because it contains malicious URLs.<br/>';
-                body += 'Please review the file and reupload it without the malicious urls, and do not click on any of them.<br/><br/>';
-                body += 'Best regards';
-                fireEmailNotification(emailDestination, subject, body);
-            }
-        	
-            // Delete the record
-            UrlScannerDatabaseController.deleteMaliciousFile(caseId);
+        	takeActionsWhenMaliciousFileFound(caseId);
         }
         
         // Populate final map with 3 keys, list contains the urls, connectedToIPQ to check if the API call was made, status to check if there's at least one malicious URL
@@ -89,6 +56,43 @@ public class UrlScannerService {
         mapOfDataAndFileStatus.put('status', maliciousFile);
         
         return mapOfDataAndFileStatus;
+    }
+    
+    private void fireEmailNotification(String emailDestination, String subject, String body) {
+        List<Messaging.SingleEmailMessage> mailList = new List<Messaging.SingleEmailMessage>();
+        
+        Messaging.SingleEmailMessage mail =  new Messaging.SingleEmailMessage();
+   
+        List<String> sendTo = new List<String>();
+        sendTo.add(emailDestination);
+        mail.setToAddresses(sendTo);
+        mail.setSubject(subject);
+        mail.setHtmlBody(body);
+   
+        mailList.add(mail);
+        
+        Messaging.sendEmail(mailList);
+    }
+    
+    private void takeActionsWhenMaliciousFileFound(String caseId) {
+        // Fire email to notify the user about the deleted file
+        List<Case> cases = UrlScannerDatabaseController.getCaseNumberById(caseId);
+        List<ContentDocumentLink> contentDocLinks = UrlScannerDatabaseController.getContentDocumentLinkByCaseId(caseId);
+
+        if(cases != null && cases.size() > 0 && contentDocLinks != null && contentDocLinks.size() > 0) {
+            String instanceUrl = URL.getSalesforceBaseUrl().toExternalForm();
+            String subject = 'File attached to the case ' + cases[0].CaseNumber + ' will be deleted';
+            String emailDestination = contentDocLinks[0].ContentDocument.CreatedBy.email;
+            String body = 'Dear ' + contentDocLinks[0].ContentDocument.CreatedBy.LastName + ',<br/><br/>';
+            body += 'The file titled ' + contentDocLinks[0].ContentDocument.Title + ' that you have attempted to attach to the case '; 
+            body += '<a href="'+ instanceUrl +  '/' + caseId + '">' + cases[0].CaseNumber + '</a> has been deleted because it contains malicious URLs.<br/>';
+            body += 'Please review the file and reupload it without the malicious urls, and do not click on any of them.<br/><br/>';
+            body += 'Best regards';
+            fireEmailNotification(emailDestination, subject, body);
+        }
+        	
+        // Delete the record
+        UrlScannerDatabaseController.deleteMaliciousFile(caseId);
     }
     
     private static List<String> getUrlsInString(String fileContent) {
