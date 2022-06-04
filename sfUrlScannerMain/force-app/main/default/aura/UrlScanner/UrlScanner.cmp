@@ -29,7 +29,7 @@
             <aura:if isTrue="{!v.showList}">
                 <div align="center" id="Child">
                     <aura:if isTrue="{!not(v.isConnected)}">
-                        <div><strong>Failure of connection to IP Quality Score, as a result URLs statuses are not displayed</strong></div>
+                        <strong>Failure of connection to IP Quality Score, as a result URLs statuses are not displayed</strong>
                     </aura:if>
                     <br/>
                     <div id = "Child">
