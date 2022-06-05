@@ -1,0 +1,55 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId" controller="UrlScannerController">
+    <!-- Limit options of the user to only .txt files -->
+    <aura:attribute name="filetype" type="List" default="['.txt']" />
+    <!-- Allow insertion of only one file at a time -->
+    <aura:attribute name="multiple" type="Boolean" default="false" />
+    <aura:attribute name="showList" type="Boolean" default="false" />
+    <aura:attribute name="loaded" type="Boolean" default="false" />
+    <aura:attribute name="isConnected" type="Boolean" default="false" />
+    <aura:attribute name="recordId" type="String" />
+    <aura:attribute name="data" type="Object"/>
+    <aura:attribute name="columns" type="List"/>
+    <aura:handler name="init" value="{!this}" action="{!c.init}"/>
+    
+    <!-- Lightning button to upload a file-->
+    <div align="center" id="Parent">
+        <div id="Child">
+            <lightning:fileUpload label="Upload a .txt file here"
+                                  name="fileUploader"
+                                  multiple="false"
+                                  accept="{!v.filetype}"
+                                  recordId="{!v.recordId}"
+                                  onuploadfinished="{!c.handleUploadFinished}" />
+        </div>
+        <br/>
+
+        <!-- Datatable only visible when showList is true, and displays the result urls -->
+        <aura:if isTrue="{!v.loaded == false}">
+            <aura:if isTrue="{!v.showList}">
+                <div align="center" id="Child">
+                    <aura:if isTrue="{!not(v.isConnected)}">
+                        <strong>Failure of connection to IP Quality Score, as a result URLs statuses are not displayed</strong>
+                    </aura:if>
+                    <br/>
+                    <div id = "Child">
+                        <aura:if isTrue="{!not(empty(v.data))}">
+                            <aura:if isTrue="{!v.data.length >= 90}" > 
+                                <strong>Please upload a file contains less than a 100 URLs to see results of URLs statuses</strong>
+                            </aura:if>
+                            <br/>
+                            <lightning:datatable data="{!v.data}"
+                                                 columns="{!v.columns}"
+                                                 keyField="Id"
+                                                 hideCheckboxColumn="true"/>
+                            
+                            <aura:set attribute="else">No URLs found</aura:set>
+                        </aura:if>
+                    </div>
+                </div>
+            </aura:if>
+            <aura:set attribute="else">
+                <lightning:spinner alternativeText="Loading" />
+            </aura:set>
+        </aura:if>
+    </div>
+</aura:component>

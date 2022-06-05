@@ -1,0 +1,10 @@
+.THIS.Parent{ 
+    width: 100px; 
+    display: table-cell; 
+    vertical-align: middle; }
+
+.THIS.Child{ 
+    width: 100px; 
+    word-wrap: break-word; 
+    display: table-cell; 
+}
