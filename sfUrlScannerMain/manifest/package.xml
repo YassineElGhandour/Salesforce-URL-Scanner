@@ -33,4 +33,8 @@
         <members>*</members>
         <name>FlexiPage</name>
     </types>
+    <types>
+        <members>*</members>
+        <name>RemoteSiteSetting</name>
+    </types>
 </Package>
