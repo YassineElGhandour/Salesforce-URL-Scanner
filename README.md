@@ -1,18 +1,23 @@
 # Salesforce Url Scanner
-// check all orgs
+Check all orgs
 > sfdx force:org:list
 
-// Login to dev hub
+
+Login to dev hub
 > sfdx auth:web:login -d -a DevHub
 
-// create scratch org
+
+Create scratch org
 > sfdx force:org:create -s -f config/project-scratch-def.json -a "urlScannerScratchOrg" 
 
-// push to scratch org
+
+Push to scratch org
 > sfdx force:source:push -u urlScannerScratchOrg
 
-// open specific scratch org
+
+Open specific scratch org
 > sfdx force:org:open -u urlScannerScratchOrg
 
-// delete scratch org
+
+Delete scratch org
 > sfdx force:org:delete -u urlScannerScratchOrg
