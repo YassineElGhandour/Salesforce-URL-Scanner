@@ -26,11 +26,7 @@
     </types>
     <types>
         <members>*</members>
-        <name>CustomApplication</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>StaticResource</name>
+        <name>Layout</name>
     </types>
     <version>54.0</version>
 </Package>
