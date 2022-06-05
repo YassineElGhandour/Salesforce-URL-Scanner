@@ -27,14 +27,14 @@
         <aura:if isTrue="{!v.loaded == false}">
             <aura:if isTrue="{!v.showList}">
                 <div align="center" id="Child">
-                    <aura:if isTrue="{!not(v.isConnected)}">
-                        <strong>Failure of connection to IP Quality Score, as a result URLs statuses are not displayed</strong>
-                    </aura:if>
-                    <br/>
                     <div id = "Child">
                         <aura:if isTrue="{!not(empty(v.data))}">
-                            <aura:if isTrue="{!v.data.length >= 90}" > 
-                                <strong>Please upload a file contains less than a 100 URLs to see results of URLs statuses</strong>
+                            <aura:if isTrue="{!not(v.isConnected)}">
+                                <strong>Failure of connection to IP Quality Score, as a result URLs statuses are not displayed</strong>
+                            </aura:if>
+                            <br/>
+                            <aura:if isTrue="{!and(v.isConnected, v.data.length >= 90)}" > 
+                                <strong>Please upload a file contains less than a 90 URLs to see results of URLs statuses</strong>
                             </aura:if>
                             <br/>
                             <lightning:datatable data="{!v.data}"
@@ -42,7 +42,7 @@
                                                  keyField="Id"
                                                  hideCheckboxColumn="true"/>
                             
-                            <aura:set attribute="else">No URLs found</aura:set>
+                            <aura:set attribute="else"><strong>No URLs found</strong></aura:set>
                         </aura:if>
                     </div>
                 </div>
