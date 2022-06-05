@@ -1,6 +1,7 @@
 public class UrlScannerService {
     private static final String HTTPS = 'https://';
     private static final String HTTP = 'http://';
+    private static final Integer URL_MAX_SIZE = 99;
     
     public Map<String, Object> scanUrlsInFile(String caseId) {
         Boolean maliciousFile = false; 
@@ -15,12 +16,12 @@ public class UrlScannerService {
         // Fetch the urls from the input file inserted by the user in the Case
       	List<String> urls = getUrlsInString(getFileContentAsString(caseId));
         
-        // Get url size to keep it under 90 to avoid 101 too many callouts exception
+        // Get url size to keep it under URL_MAX_SIZE to avoid 101 too many callouts exception
         Integer urlSize = urls.size();
         // Loop throught the urls and put them in a map where the key is 'url', this will be needed to populate data in the lightning aura datatable
         for(String oneUrl : urls) {
             // a map where the keys are the state and status and the results are whether the api call was made succesfully and the safety of the url (respectively)
-            Map<String, Object> mapOfScannedUrlsWithStatus = urlSize <= 90 ? UrlScannerApiHandler.scanUrlWithIpQuality(oneUrl, ipQualityScoreApiKey) : new Map<String, Object>();
+            Map<String, Object> mapOfScannedUrlsWithStatus = urlSize <= URL_MAX_SIZE ? UrlScannerApiHandler.scanUrlWithIpQuality(oneUrl, ipQualityScoreApiKey) : new Map<String, Object>();
             Integer successApiCall = mapOfScannedUrlsWithStatus != null && mapOfScannedUrlsWithStatus.get('response_status') != null ? (Integer) mapOfScannedUrlsWithStatus.get('response_status') : 400;
             Boolean isMalicious = false;
             String urlSafety = '';
