@@ -3,11 +3,8 @@
     	// Init with empty
     },
     
-    handleClick: function (cmp, event) {
-        cmp.set('v.loaded', true);
-    },
-    
     handleUploadFinished: function (cmp, event, helper) {
+        cmp.set('v.loaded', true);
        	helper.scanUrlsInFileInHelper(cmp, event);
     }
 })
