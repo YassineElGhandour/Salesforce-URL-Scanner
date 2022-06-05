@@ -1,4 +1,8 @@
 # Salesforce Url Scanner
+
+Go to SFDX project location
+> cd sfUrlScannerMain
+
 Check all orgs
 > sfdx force:org:list
 
