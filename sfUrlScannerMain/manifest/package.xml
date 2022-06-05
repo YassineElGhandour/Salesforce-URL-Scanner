@@ -24,12 +24,10 @@
         <members>*</members>
         <name>AuraDefinitionBundle</name>
     </types>
-    <!-- 
     <types>
         <members>*</members>
-        <name>LightningComponentBundle</name>
-    </types
-    -->
+        <name>CustomApplication</name>
+    </types>
     <types>
         <members>*</members>
         <name>StaticResource</name>
