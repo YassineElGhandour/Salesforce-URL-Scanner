@@ -29,4 +29,8 @@
         <name>Layout</name>
     </types>
     <version>54.0</version>
+    <types>
+        <members>*</members>
+        <name>FlexiPage</name>
+    </types>
 </Package>
