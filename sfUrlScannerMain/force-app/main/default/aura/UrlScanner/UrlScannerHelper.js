@@ -20,8 +20,12 @@
                 cmp.set("v.data", data.list);
                 
                 // showList by default is false, and is only set as true when the state of this action is success to show the datatable only after attaching a file to the case
-                cmp.set("v.showList", true);
+                // If the file surpasses the limit of 1000000 characters, don't show any results, but keep the file attached
+                if(!data.moreThanThresholdChars) {
+                    cmp.set("v.showList", true);
+                }
                 cmp.set("v.isConnected", data.connectedToIPQ);
+                cmp.set("v.moreThanThresholdChars", data.moreThanThresholdChars);
                 cmp.set("v.loaded", false);
                 
                 // Set one column for the aura databable which is URL

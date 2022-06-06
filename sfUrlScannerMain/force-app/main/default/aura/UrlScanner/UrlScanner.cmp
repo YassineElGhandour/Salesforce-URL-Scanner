@@ -6,6 +6,7 @@
     <aura:attribute name="showList" type="Boolean" default="false" />
     <aura:attribute name="loaded" type="Boolean" default="false" />
     <aura:attribute name="isConnected" type="Boolean" default="false" />
+    <aura:attribute name="moreThanThresholdChars" type="Boolean" default="false" />
     <aura:attribute name="recordId" type="String" />
     <aura:attribute name="data" type="Object"/>
     <aura:attribute name="columns" type="List"/>
@@ -25,6 +26,9 @@
 
         <!-- Datatable only visible when showList is true, and displays the result urls -->
         <aura:if isTrue="{!v.loaded == false}">
+            <aura:if isTrue="{!v.moreThanThresholdChars}" > 
+                <strong>File size is more than 100KB, please upload a file with less than 100KB</strong>
+            </aura:if>
             <aura:if isTrue="{!v.showList}">
                 <div align="center" id="Child">
                     <div id = "Child">
@@ -33,7 +37,8 @@
                                 <strong>Failure of connection to IP Quality Score, as a result URLs statuses are not displayed</strong>
                             </aura:if>
                             <br/>
-                            <aura:if isTrue="{!and(v.isConnected, v.data.length >= 90)}" > 
+                            <br/>
+                            <aura:if isTrue="{!and(v.data.length >= 90)}" > 
                                 <strong>Please upload a file contains less than a 90 URLs to see results of URLs statuses</strong>
                             </aura:if>
                             <br/>
