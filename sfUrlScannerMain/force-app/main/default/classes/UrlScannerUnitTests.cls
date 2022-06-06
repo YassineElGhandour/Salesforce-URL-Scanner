@@ -3,6 +3,11 @@ public class UrlScannerUnitTests {
     private static final String BODY_WITH_URLS = 'Visit photo hosting sites such as www.flickr.com,500px.com, www.freeimagehosting.net and https://postimage.io and image';
     private static final String BODY_WITHOUT_URLS = 'This is a unit test body that does not contain any URLs';
     
+    // Prepare a setup of mock data of 
+    // * IP Quality Score custom setting
+    // * Case
+    // * ContentDocumentLink
+    // and return the case Id
     private static String testSetup(String bodyString) {
         IPQualityScore__c ipQualityScore = new IPQualityScore__c();
         ipQualityScore.API_Key__c = 'API_KEY';
@@ -32,6 +37,10 @@ public class UrlScannerUnitTests {
         return testCase.Id;
     }
     
+    // Set up HTTP mock response with 3 parameters
+    // * HTTP request
+    // * Risk Score to manmipulate the results of the urls being malicious or not (risk < 10 = safe, risk score > 10 == malicious)
+    // * Status code to cover case of 400
     private static HttpResponse setHttpResponseWithRisk(HttpRequest req, Integer riskScore, Integer statusCode) {
         Map<String, Object> jsonMap = new Map<String, Object>();
         jsonMap.put('risk_score', riskScore);
@@ -49,6 +58,7 @@ public class UrlScannerUnitTests {
     
     // Mock successful responses of IP Quality Score no risk
     public class IpQualityScoreMockZeroRisk implements HttpCalloutMock {
+        // Status code is 200 because the call is faked to be successful
         public HttpResponse respond(HttpRequest req) {
             return setHttpResponseWithRisk(req, 0, 200);
         }
@@ -56,6 +66,7 @@ public class UrlScannerUnitTests {
     
     // Mock successful responses of IP Quality Score With risk
     public class IpQualityScoreMockWithRisk implements HttpCalloutMock {
+        // Status code is 200 because the call is faked to be successful
         public HttpResponse respond(HttpRequest req) {
 			return setHttpResponseWithRisk(req, 100, 200);
         }
@@ -63,13 +74,14 @@ public class UrlScannerUnitTests {
     
     // Mock failure responses of IP Quality Score With risk
     public class IpQualityScoreMockFailure implements HttpCalloutMock {
+        // Status code is 400 because the call is faked to fail
         public HttpResponse respond(HttpRequest req) {
 			return setHttpResponseWithRisk(req, 100, 400);
         }
     }
     
     @isTest
-    public static void testScanMoreThan100Kb() {
+    public static void testScanMoreThan100KbFile() {
         // HTTP Mocks
         Test.setMock(HttpCalloutMock.class, new IpQualityScoreMockZeroRisk());
         
@@ -79,7 +91,8 @@ public class UrlScannerUnitTests {
         Test.startTest();
         
         Map<String, Object> mapOfDataAndStatus = UrlScannerController.fetchUrlsAndTheirStatuses(caseId);
-        //System.assertEquals(true, urls.size() == 0, bodyText);
+        List<Map<String, String>> listOfMapsOfUrls = (List<Map<String, String>>) mapOfDataAndStatus.get('list');
+        System.assertEquals(true, listOfMapsOfUrls.size() == 0, 'Urls are found in the input txt');
         
         Test.stopTest();
     }
