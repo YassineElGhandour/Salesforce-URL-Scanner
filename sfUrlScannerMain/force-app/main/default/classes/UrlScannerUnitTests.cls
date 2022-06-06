@@ -69,6 +69,22 @@ public class UrlScannerUnitTests {
     }
     
     @isTest
+    public static void testScanMoreThan100Kb() {
+        // HTTP Mocks
+        Test.setMock(HttpCalloutMock.class, new IpQualityScoreMockZeroRisk());
+        
+        // Setup mock data
+        String caseId = testSetup(UrlScannerService.FILE_CONTAINS_MORE_THAN_THRESHOLD_CHARACTERS);
+        
+        Test.startTest();
+        
+        Map<String, Object> mapOfDataAndStatus = UrlScannerController.fetchUrlsAndTheirStatuses(caseId);
+        //System.assertEquals(true, urls.size() == 0, bodyText);
+        
+        Test.stopTest();
+    }
+    
+    @isTest
     public static void testScanNoUrlsInFile() {
         // HTTP Mocks
         Test.setMock(HttpCalloutMock.class, new IpQualityScoreMockZeroRisk());
