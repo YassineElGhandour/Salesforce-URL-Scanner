@@ -37,7 +37,6 @@
                                 <strong>Failure of connection to IP Quality Score, as a result URLs statuses are not displayed</strong>
                             </aura:if>
                             <br/>
-                            <br/>
                             <aura:if isTrue="{!and(v.data.length >= 90)}" > 
                                 <strong>Please upload a file contains less than a 90 URLs to see results of URLs statuses</strong>
                             </aura:if>
