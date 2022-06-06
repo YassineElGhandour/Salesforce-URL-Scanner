@@ -1,10 +1,21 @@
 public class UrlScannerService {
     private static final String HTTPS = 'https://';
     private static final String HTTP = 'http://';
+    // max size and/or number of characters allowed in one uploaded file
     private static final Integer CHARACTERS_THRESHOLD = 100000;
-    private static final String FILE_CONTAINS_MORE_THAN_THRESHOLD_CHARACTERS = 'File contains a string that is longer than ' + CHARACTERS_THRESHOLD + ' characters';
+    // max size of allowed number of urls in one uploaded file
     private static final Integer URL_MAX_SIZE = 90;
+
+    // to be compared in fileContent, if it equals this static final String it means we hit the exception Regex too complicated
+    @TestVisible
+    private static final String FILE_CONTAINS_MORE_THAN_THRESHOLD_CHARACTERS = 'File contains a string that is longer than ' + CHARACTERS_THRESHOLD + ' characters';
     
+    // Input : Case ID
+    // Result : a map of 4 keys
+    // * list : a list of maps that has 2 keys, url and status, that return the url fetched and the safety health status of it (respectively)
+    // * connectedToIPQ : true if the connection to IP Quality service is established, false if not
+    // * status : true if the file contains a maliciousUrl, false if not
+    // * moreThanThresholdChars : true if the file exceeds the CHARACTERS_THRESHOLD, false if not
     public Map<String, Object> scanUrlsInFile(String caseId) {
         Boolean maliciousFile = false; 
         Boolean connectedToIPQ = false;
@@ -18,10 +29,13 @@ public class UrlScannerService {
       	
         // Fetch the urls from the input file inserted by the user in the Case
         String bodyText = getFileContentAsString(caseId);
+        // If the body text is FILE_CONTAINS_MORE_THAN_THRESHOLD_CHARACTERS, it means we would've hit the regex too complicated exception and the code won't proceed with that method
         if(bodyText != null && String.isNotEmpty(bodyText) && bodyText.equalsIgnoreCase(FILE_CONTAINS_MORE_THAN_THRESHOLD_CHARACTERS)) {
             moreThanThresholdChars = true;
         }
+        // If the body was parsed okay
         else if(bodyText != null && String.isNotEmpty(bodyText) && !bodyText.equalsIgnoreCase(FILE_CONTAINS_MORE_THAN_THRESHOLD_CHARACTERS)) {
+            // Get list of urls in one body Text
             List<String> urls = getUrlsInString(bodyText);
         
             // Get url size to keep it under URL_MAX_SIZE to avoid 101 too many callouts exception
@@ -30,7 +44,9 @@ public class UrlScannerService {
             for(String oneUrl : urls) {
                 // a map where the keys are the state and status and the results are whether the api call was made succesfully and the safety of the url (respectively)
                 Map<String, Object> mapOfScannedUrlsWithStatus = urlSize <= URL_MAX_SIZE ? UrlScannerApiHandler.scanUrlWithIpQuality(oneUrl, ipQualityScoreApiKey) : new Map<String, Object>();
+                // successApiCall is 200 if the call is succesful and there's a response to the API call 
                 Integer successApiCall = mapOfScannedUrlsWithStatus != null && mapOfScannedUrlsWithStatus.get('response_status') != null ? (Integer) mapOfScannedUrlsWithStatus.get('response_status') : 400;
+                // to track the safety health of one URL
                 Boolean isMalicious = false;
                 String urlSafety = '';
                 
@@ -40,6 +56,7 @@ public class UrlScannerService {
                 if(successApiCall == 200) {
                     isMalicious = mapOfScannedUrlsWithStatus != null && mapOfScannedUrlsWithStatus.get('state') != null ? (Boolean) mapOfScannedUrlsWithStatus.get('state') : false;
                     urlSafety = isMalicious ? 'Malicious URL' : 'Safe URL';
+                    // set connectedToIPQ meaning that the connection was succesful
                     connectedToIPQ = true;
                 }
             
@@ -69,6 +86,7 @@ public class UrlScannerService {
         return mapOfDataAndFileStatus;
     }
     
+    // send email notifications to the emailDestination
     private void fireEmailNotification(String emailDestination, String subject, String body) {
         List<Messaging.SingleEmailMessage> mailList = new List<Messaging.SingleEmailMessage>();
         
@@ -90,6 +108,7 @@ public class UrlScannerService {
         List<Case> cases = UrlScannerDatabaseController.getCaseNumberById(caseId);
         List<ContentDocumentLink> contentDocLinks = UrlScannerDatabaseController.getContentDocumentLinkByCaseId(caseId);
 
+        // check that there's a case and a doc, then send the email
         if(cases != null && cases.size() > 0 && contentDocLinks != null && contentDocLinks.size() > 0) {
             String instanceUrl = URL.getSalesforceBaseUrl().toExternalForm();
             String subject = 'File attached to the case ' + cases[0].CaseNumber + ' will be deleted';
@@ -102,10 +121,11 @@ public class UrlScannerService {
             fireEmailNotification(emailDestination, subject, body);
         }
         	
-        // Delete the record
+        // Delete the record in a future callout (separate thread)
         UrlScannerDatabaseController.deleteMaliciousFile(caseId);
     }
 
+    // Get all URLS in one file body text
     private static List<String> getUrlsInString(String fileContent) {
         // Regex to detect urls
         String regexUrl =  '(?:(?:(?:[a-z0-9]{3,9}:(?://)?)(?:[-;:&=+$,w]+@)?[a-z0-9.-]+|(?:www.|[-;:&=+$??,w]+@)[a-z0-9.-]+)((?:/[+~%/.w-]*)?\\??(?:[-+=&;%@.w]*)#?w*)?)';
@@ -115,6 +135,7 @@ public class UrlScannerService {
         Matcher myMatcher = MyPattern.matcher(fileContent);
         List<String> urls = new List<String>();
 
+        // try catch to avoid LOB or regex too complicated exceptions
         try {
             while (myMatcher.find()) {
                 String initialUrl = myMatcher.group();
@@ -138,8 +159,8 @@ public class UrlScannerService {
         return urls;
     }
     
+    // Fetch both ContentDocumentLink and ContentVersion to get encoded then decoded versionData of the latest upload file version
     private static String getFileContentAsString(String caseId) {
-        
         // SF doesn't allow semi-join query for ContentVersion and ContentDocumentLink, that's why we need two SOQL queries to get the end result which is VersionData
         String fileContent = '';
         // Fetch the ContentDocumentLink First to get the ContentDocumentId
@@ -155,6 +176,7 @@ public class UrlScannerService {
                     fileContent = EncodingUtil.base64Decode(EncodingUtil.base64Encode(versionData)).toString();
                     
                 }
+                // if the size exceeds the threshold, then return FILE_CONTAINS_MORE_THAN_THRESHOLD_CHARACTERS to be used in a later logic
                 else {
                     fileContent = FILE_CONTAINS_MORE_THAN_THRESHOLD_CHARACTERS;
                 }

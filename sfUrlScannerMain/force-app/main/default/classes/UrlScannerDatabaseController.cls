@@ -14,6 +14,7 @@ public class UrlScannerDatabaseController {
         List<ContentDocumentLink> contentDocumentLinksByCaseId = new List<ContentDocumentLink>();
         // Check if the user has read rights of ContentDocumentLink
         if(Schema.sObjectType.ContentDocumentLink.isAccessible() && caseId != null && String.isNotEmpty(caseId)) {
+            // Only the latest created document to be fetched, hence order by and limit 1
             contentDocumentLinksByCaseId = [SELECT ContentDocumentId, ContentDocument.CreatedBy.Email, ContentDocument.Title, ContentDocument.CreatedBy.LastName FROM ContentDocumentLink 
                                             WHERE LinkedEntityId =: caseId ORDER BY ContentDocument.CreatedDate DESC LIMIT 1];
         }        
@@ -25,6 +26,7 @@ public class UrlScannerDatabaseController {
         List<ContentVersion> contentDocumentVersions = new List<ContentVersion>();
         // Check if the user has read rights of ContentVersion
         if(Schema.sObjectType.ContentVersion.isAccessible()) {
+            // fetch only the latest version of a ContentVersion
             if(contentDocumentId != null && String.isNotEmpty(contentDocumentId)) {
                 contentDocumentVersions = [SELECT Id, ContentDocumentId, VersionData FROM ContentVersion WHERE ContentDocumentId =: contentDocumentId AND IsLatest = true];
             }
@@ -40,6 +42,7 @@ public class UrlScannerDatabaseController {
         List<IPQualityScore__c> ipQualityScores = new List<IPQualityScore__c>();
         // Check if the user has read rights of IPQualityScore__c
         if(Schema.sObjectType.IPQualityScore__c.isAccessible()) {
+            // Get only the first key
             ipQualityScores = [SELECT Id, API_Key__c FROM IPQualityScore__c ORDER BY CreatedDate DESC LIMIT 1];
         }
         return ipQualityScores;
