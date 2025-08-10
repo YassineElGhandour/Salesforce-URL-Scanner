@@ -1,5 +1,5 @@
-@IsTest(SeeAllData = false)
-public class UrlScannerUnitTests {
+@IsTest
+private class UrlScannerUnitTests {
     private static final String BODY_WITH_URLS = 'Visit photo hosting sites such as www.flickr.com,500px.com, www.freeimagehosting.net and https://postimage.io and image';
     private static final String BODY_WITHOUT_URLS = 'This is a unit test body that does not contain any URLs';
     
@@ -57,7 +57,7 @@ public class UrlScannerUnitTests {
     }
     
     // Mock successful responses of IP Quality Score no risk
-    public class IpQualityScoreMockZeroRisk implements HttpCalloutMock {
+    private class IpQualityScoreMockZeroRisk implements HttpCalloutMock {
         // Status code is 200 because the call is faked to be successful
         public HttpResponse respond(HttpRequest req) {
             return setHttpResponseWithRisk(req, 0, 200);
@@ -65,7 +65,7 @@ public class UrlScannerUnitTests {
     }
     
     // Mock successful responses of IP Quality Score With risk
-    public class IpQualityScoreMockWithRisk implements HttpCalloutMock {
+    private class IpQualityScoreMockWithRisk implements HttpCalloutMock {
         // Status code is 200 because the call is faked to be successful
         public HttpResponse respond(HttpRequest req) {
 			return setHttpResponseWithRisk(req, 100, 200);
@@ -73,7 +73,7 @@ public class UrlScannerUnitTests {
     }
     
     // Mock failure responses of IP Quality Score With risk
-    public class IpQualityScoreMockFailure implements HttpCalloutMock {
+    private class IpQualityScoreMockFailure implements HttpCalloutMock {
         // Status code is 400 because the call is faked to fail
         public HttpResponse respond(HttpRequest req) {
 			return setHttpResponseWithRisk(req, 100, 400);
@@ -81,7 +81,7 @@ public class UrlScannerUnitTests {
     }
     
     @isTest
-    public static void testScanMoreThan100KbFile() {
+    private static void testScanMoreThan100KbFile() {
         // HTTP Mocks
         Test.setMock(HttpCalloutMock.class, new IpQualityScoreMockZeroRisk());
         
@@ -98,7 +98,7 @@ public class UrlScannerUnitTests {
     }
     
     @isTest
-    public static void testScanNoUrlsInFile() {
+    private static void testScanNoUrlsInFile() {
         // HTTP Mocks
         Test.setMock(HttpCalloutMock.class, new IpQualityScoreMockZeroRisk());
         
@@ -115,7 +115,7 @@ public class UrlScannerUnitTests {
     }
     
     @isTest
-    public static void testScanUrlInFileZeroRisk() {
+    private static void testScanUrlInFileZeroRisk() {
         // HTTP Mocks
         Test.setMock(HttpCalloutMock.class, new IpQualityScoreMockZeroRisk());
         
@@ -134,7 +134,7 @@ public class UrlScannerUnitTests {
     }
     
     @isTest
-    public static void testScanUrlInFileWithRisk() {
+    private static void testScanUrlInFileWithRisk() {
         // HTTP Mocks
         Test.setMock(HttpCalloutMock.class, new IpQualityScoreMockWithRisk());
         
@@ -153,7 +153,7 @@ public class UrlScannerUnitTests {
     }
     
     @isTest
-    public static void testScanUrlInFileFailure() {
+    private static void testScanUrlInFileFailure() {
         // HTTP Mocks
         Test.setMock(HttpCalloutMock.class, new IpQualityScoreMockFailure());
         
@@ -168,5 +168,4 @@ public class UrlScannerUnitTests {
         
         Test.stopTest();
     }
-
 }

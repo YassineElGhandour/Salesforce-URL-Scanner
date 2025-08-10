@@ -1,4 +1,5 @@
-public class UrlScannerService {
+public with sharing class UrlScannerService {
+
     private static final String HTTPS = 'https://';
     private static final String HTTP = 'http://';
     // max size and/or number of characters allowed in one uploaded file
@@ -185,5 +186,4 @@ public class UrlScannerService {
         
         return fileContent;
     }
-
 }

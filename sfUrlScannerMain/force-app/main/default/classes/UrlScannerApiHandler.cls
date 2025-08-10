@@ -1,6 +1,6 @@
-public class UrlScannerApiHandler {
+public with sharing class UrlScannerApiHandler {
     
-	// endpoint for URL reports
+	// Endpoint for URL reports
 	private static final String IP_QUALITY_SCORE_EP = 'https://ipqualityscore.com/api/json/url';
     private static final Integer IPQ_THRESHOLD = 10;
 
